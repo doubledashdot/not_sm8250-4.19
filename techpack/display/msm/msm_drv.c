@@ -71,6 +71,7 @@
 #define IDLE_TIMEOUT_MS_DEFAULT		100
 
 static DEFINE_MUTEX(msm_release_lock);
+static struct kmem_cache *kmem_vblank_work_pool;
 
 #if defined(CONFIG_DISPLAY_SAMSUNG)
 static BLOCKING_NOTIFIER_HEAD(msm_drm_notifier_list);
