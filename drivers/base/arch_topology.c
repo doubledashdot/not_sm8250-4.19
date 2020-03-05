@@ -24,9 +24,9 @@
 #include <linux/uaccess.h>
 #endif
 
-bool topology_scale_freq_invariant(void)
+__weak bool arch_freq_counters_available(struct cpumask *cpus)
 {
-	return cpufreq_supports_freq_invariance();
+	return false;
 }
 
 DEFINE_PER_CPU(unsigned long, freq_scale) = SCHED_CAPACITY_SCALE;
@@ -40,6 +40,13 @@ void arch_set_freq_scale(const struct cpumask *cpus, unsigned long cur_freq,
 	int i;
 
 	if (WARN_ON_ONCE(!cur_freq || !max_freq))
+		return;
+	/*
+	 * If the use of counters for FIE is enabled, just return as we don't
+	 * want to update the scale factor with information from CPUFREQ.
+	 * Instead the scale factor will be updated from arch_scale_freq_tick.
+	 */
+	if (arch_freq_counters_available(cpus))
 		return;
 
 	scale = (cur_freq << SCHED_CAPACITY_SHIFT) / max_freq;

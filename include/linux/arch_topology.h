@@ -57,6 +57,8 @@ static inline unsigned long topology_get_thermal_pressure(int cpu)
 	return per_cpu(thermal_pressure, cpu);
 }
 
+bool arch_freq_counters_available(struct cpumask *cpus);
+
 void arch_set_thermal_pressure(struct cpumask *cpus,
 			       unsigned long th_pressure);
 #endif /* _LINUX_ARCH_TOPOLOGY_H_ */
