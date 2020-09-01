@@ -24,7 +24,7 @@
 #include <linux/uaccess.h>
 #endif
 
-__weak bool arch_freq_counters_available(struct cpumask *cpus)
+__weak bool arch_freq_counters_available(const struct cpumask *cpus)
 {
 	return false;
 }
