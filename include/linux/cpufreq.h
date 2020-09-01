@@ -219,6 +219,10 @@ static inline unsigned int cpufreq_get_hw_max_freq(unsigned int cpu)
 {
 	return 0;
 }
+static inline bool cpufreq_supports_freq_invariance(void)
+{
+	return false;
+}
 static inline void disable_cpufreq(void) { }
 #endif
 
