@@ -430,6 +430,9 @@ typedef int (*dma_buf_destructor)(struct dma_buf *dmabuf, void *dtor_data);
  * @poll: for userspace poll support
  * @cb_excl: for userspace poll support
  * @cb_shared: for userspace poll support
+ * @sysfs_entry: for exposing information about this buffer in sysfs.
+ * The attachment_uid member of @sysfs_entry is protected by dma_resv lock
+ * and is incremented on each attach.
  *
  * This represents a shared buffer, created by calling dma_buf_export(). The
  * userspace representation is a normal file descriptor, which can be created by
@@ -476,6 +479,15 @@ struct dma_buf {
 	atomic_t dent_count;
 
 	bool from_kmem;
+#ifdef CONFIG_DMABUF_SYSFS_STATS
+	/* for sysfs stats */
+	struct dma_buf_sysfs_entry {
+		struct kobject kobj;
+		struct dma_buf *dmabuf;
+		unsigned int attachment_uid;
+		struct kset *attach_stats_kset;
+	} *sysfs_entry;
+#endif
 };
 
 /**
@@ -488,6 +500,7 @@ struct dma_buf {
  * @priv: exporter specific attachment data.
  * @dma_map_attrs: DMA attributes to be used when the exporter maps the buffer
  * through dma_buf_map_attachment.
+ * @sysfs_entry: For exposing information about this attachment in sysfs.
  *
  * This structure holds the attachment information between the dma_buf buffer
  * and its user device(s). The list contains one attachment struct per device
@@ -506,6 +519,13 @@ struct dma_buf_attachment {
 	enum dma_data_direction dir;
 	void *priv;
 	unsigned long dma_map_attrs;
+#ifdef CONFIG_DMABUF_SYSFS_STATS
+	/* for sysfs stats */
+	struct dma_buf_attach_sysfs_entry {
+		struct kobject kobj;
+		unsigned int map_counter;
+	} *sysfs_entry;
+#endif
 };
 
 /**
