@@ -4171,6 +4171,8 @@ int fts_set_lowpowermode(struct fts_ts_info *info, u8 mode)
 	}
 
 	if (mode == TO_LOWPOWER_MODE) {
+		info->fod_pressed = 0;
+
 		if (device_may_wakeup(&info->client->dev))
 			enable_irq_wake(info->irq);
 
