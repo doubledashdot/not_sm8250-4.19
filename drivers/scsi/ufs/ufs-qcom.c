@@ -913,7 +913,6 @@ static int ufs_qcom_full_reset(struct ufs_hba *hba)
 {
 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
 	int ret = -ENOTSUPP;
-	bool reenable_intr = false;
 
 	host->hw_reset_count++;
 	host->last_hw_reset = (unsigned long)ktime_to_us(ktime_get());
@@ -928,10 +927,6 @@ static int ufs_qcom_full_reset(struct ufs_hba *hba)
 				ret);
 		goto out;
 	}
-
-	reenable_intr = hba->is_irq_enabled;
-	disable_irq(hba->irq);
-	hba->is_irq_enabled = false;
 
 	ret = reset_control_assert(hba->core_reset);
 	if (ret) {
@@ -951,11 +946,6 @@ static int ufs_qcom_full_reset(struct ufs_hba *hba)
 	if (ret)
 		dev_err(hba->dev, "%s: core_reset deassert failed, err = %d\n",
 				__func__, ret);
-
-	if (reenable_intr) {
-		enable_irq(hba->irq);
-		hba->is_irq_enabled = true;
-	}
 
 out:
 	return ret;
