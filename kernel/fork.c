@@ -2351,8 +2351,8 @@ long _do_fork(unsigned long clone_flags,
 	 * when userspace launches an app
 	 */
 	if (task_is_zygote(current)) {
-		devfreq_boost_kick_max(DEVFREQ_CPU_LLCC_DDR_BW, 50);
-		cpu_event_boost_kick_max(50);
+		cpu_event_boost_kick_max(150);
+		devfreq_boost_kick_max(DEVFREQ_CPU_LLCC_DDR_BW, 150);
 	}
 
 	/*
