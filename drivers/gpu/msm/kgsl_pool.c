@@ -19,6 +19,11 @@
 #define KGSL_MAX_POOLS 5
 #define KGSL_MAX_POOL_ORDER 9
 #else
+
+#ifdef CONFIG_E404_SIGNATURE
+#include <linux/e404_attributes.h>
+#endif
+
 #define KGSL_MAX_POOLS 4
 #define KGSL_MAX_POOL_ORDER 8
 #endif
@@ -299,7 +304,12 @@ int kgsl_pool_alloc_page(int *page_size, struct page **pages,
 			} else
 				return -ENOMEM;
 		}
+#ifdef CONFIG_E404_SIGNATURE
+		if (e404_data.e404_kgsl_skip_zeroing == 0)
+			kgsl_zero_page(page, order);
+#else
 		kgsl_zero_page(page, order);
+#endif
 		goto done;
 	}
 
@@ -319,7 +329,12 @@ int kgsl_pool_alloc_page(int *page_size, struct page **pages,
 			page = alloc_pages(gfp_mask, order);
 			if (page == NULL)
 				return -ENOMEM;
+#ifdef CONFIG_E404_SIGNATURE
+			if (e404_data.e404_kgsl_skip_zeroing == 0)
+				kgsl_zero_page(page, order);
+#else
 			kgsl_zero_page(page, order);
+#endif
 			goto done;
 		}
 	}
@@ -357,8 +372,12 @@ int kgsl_pool_alloc_page(int *page_size, struct page **pages,
 			} else
 				return -ENOMEM;
 		}
-
+#ifdef CONFIG_E404_SIGNATURE
+		if (e404_data.e404_kgsl_skip_zeroing == 0)
+			kgsl_zero_page(page, order);
+#else
 		kgsl_zero_page(page, order);
+#endif
 	}
 
 done:
