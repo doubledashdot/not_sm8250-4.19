@@ -4,6 +4,13 @@
 
 menu "Misc devices"
 
+config E404_SIGNATURE
+ 	tristate "Signature E404 kernel build"
+ 	default y
+ 	help
+ 	  Enabling this require needed files of e404_attributes.c and e404_attributes.h
+	  Allow to build kernel with E404 attributes and sysfs features.
+
 config SENSORS_LIS3LV02D
 	tristate
 	depends on INPUT
