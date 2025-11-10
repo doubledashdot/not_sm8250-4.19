@@ -1370,6 +1370,157 @@
 				qcom,mdss-dsc-bit-per-pixel = <8>;
 				qcom,mdss-dsc-block-prediction-enable;
 			};
+			
+			fhd48hs {
+				qcom,display-topology = <1 1 1>, <2 2 1>;
+				qcom,default-topology-index = <1>;
+				qcom,mdss-dsi-timing-default;
+				qcom,mdss-dsi-panel-width = <1080>;
+				qcom,mdss-dsi-panel-height = <2400>;
+
+				qcom,mdss-dsi-h-pulse-width = <92>;
+				qcom,mdss-dsi-h-back-porch = <92>;
+				qcom,mdss-dsi-h-front-porch = <92>;
+				qcom,mdss-dsi-h-sync-skew = <0>;
+
+				qcom,mdss-dsi-v-pulse-width = <8>;
+				qcom,mdss-dsi-v-back-porch = <12>;
+				qcom,mdss-dsi-v-front-porch = <2420>;
+
+				samsung,mdss-dsi-sot-hs-mode; // HS Setting
+				qcom,mdss-dsi-panel-framerate = <48>;
+				qcom,mdss-mdp-transfer-time-us = <15866>; /* transfer time: 48Hz: 20032, 60Hz: 15866, 96Hz: 9616, 120Hz: 7533 */
+				qcom,mdss-dsi-panel-clockrate = <1110000000>; /* 1110 Mbps*/
+				qcom,mdss-dsi-panel-phy-timings = [00 25 0A 0A 27 24 0A 0A 09 02 04 00 1F 1A];	// 1110 Mbps
+
+				qcom,mdss-dsi-t-clk-pre = <0x1F>;
+				qcom,mdss-dsi-t-clk-post = <0x1A>;
+
+				qcom,mdss-dsi-on-command = [
+					/* Sleep out, wait 10ms(0x0A) */
+					05 01 00 00 0A 00 02 11 00
+
+					/* TE Vsync On */
+					29 00 00 00 00 00 03 F0 5A 5A
+					29 00 00 00 00 00 02 35 00
+					29 01 00 00 00 00 03 F0 A5 A5
+
+					/* PAGE Address Setting */
+					29 00 00 00 00 00 05 2A 00 00 04 37
+					29 01 00 00 00 00 05 2B 00 00 09 5F
+
+					/* Vsync Setting */
+					29 00 00 00 00 00 03 F0 5A 5A
+					29 00 00 00 00 00 02 B0 01
+					29 00 00 00 00 00 02 E6 01
+					29 01 00 00 00 00 03 F0 A5 A5
+
+					/* PCD Setting */
+					29 00 00 00 00 00 03 F0 5A 5A
+					29 00 00 00 00 00 03 E8 55 12 // Default Low(55) / Disable SW Reset (12)
+					29 01 00 00 00 00 03 F0 A5 A5
+
+					/* ACL Setting Value */
+					29 00 00 00 00 00 03 F0 5A 5A
+					29 00 00 00 00 00 02 B0 CA
+					29 00 00 00 00 00 02 BB 0B
+					29 00 00 00 00 00 02 B0 CF
+					29 00 00 00 00 00 03 BB 41 FF
+					29 00 00 00 00 00 02 B0 D9
+					29 00 00 00 00 00 02 BB 20
+					29 01 00 00 00 00 03 F0 A5 A5
+
+					/* DSC Setting */
+					29 01 00 00 00 00 03 F0 5A 5A
+					07 01 00 00 00 00 01 01               /* Compression Enable */
+					0A 01 00 00 00 00 80                  /* PPS setting */
+						11 00 00 89 30 80 09
+						60 04 38 00 28 02 1C
+						02 1C 02 00 02 0E 00
+						20 03 DD 00 07 00 0C
+						02 77 02 8B 18 00 10
+						F0 03 0C 20 00 06 0B
+						0B 33 0E 1C 2A 38 46
+						54 62 69 70 77 79 7B
+						7D 7E 01 02 01 00 09
+						40 09 BE 19 FC 19 FA
+						19 F8 1A 38 1A 78 1A
+						B6 2A F6 2B 34 2B 74
+						3B 74 6B F4 00 00 00
+						00 00 00 00 00 00 00
+						00 00 00 00 00 00 00
+						00 00 00 00 00 00 00
+						00 00 00 00 00 00 00
+						00 00 00 00 00 00 00
+						00 00
+					29 01 00 00 00 00 03 F0 A5 A5
+
+					/* A-sync Setting */
+					29 01 00 00 00 00 03 F0 5A 5A
+					29 00 00 00 00 00 02 60 00		//0x00 : 96/60/48 Hz
+					29 00 00 00 00 00 02 B0 0B
+					29 00 00 00 00 00 03 D8 A9 70		//0xA9 0x70 : 120/60 Hz
+					29 00 00 00 00 00 02 B0 D4
+					29 00 00 00 00 00 19 BA			//120/60 Hz Blur Setting
+						12 E0 09 2E 09 03 08 96
+						08 2C 07 52 06 42 05 2A
+						03 DA 02 82 01 2C 00 14
+					29 00 00 00 00 00 08 BB 7A 01 25 00 14 20 30 //0x20:120/60 Hz Porch Setting
+					29 00 00 00 00 00 02 F7 03
+					29 01 00 00 00 00 03 F0 A5 A5
+
+					/* TE Setting */
+					29 00 00 00 00 00 03 F0 5A 5A
+					29 00 00 00 00 00 08 DF 00 00 00 01 95 80 0C
+					29 01 00 00 00 00 03 F0 A5 A5
+
+					/* Smooth Dimming Setting */
+					29 00 00 00 00 00 03 F0 5A 5A
+					29 00 00 00 00 00 02 B0 06
+					29 00 00 00 00 00 02 B7 08
+					29 01 00 00 00 00 03 F0 A5 A5
+
+					/* AOD Setting */
+					29 00 00 00 00 00 03 F0 5A 5A
+					29 00 00 00 00 00 02 B0 09
+					29 00 00 00 00 00 02 EE 00
+					29 01 00 00 00 00 03 F0 A5 A5
+
+					/* SAP Setting */
+					29 00 00 00 00 00 03 F0 5A 5A
+					29 00 00 00 00 00 02 B0 03
+					29 00 00 00 00 00 03 D4 10 10
+					29 00 00 00 00 00 02 F7 03
+					29 01 00 00 00 00 03 F0 A5 A5
+
+					/* Brightness */
+					29 00 00 00 00 00 03 F0 5A 5A
+					29 00 00 00 00 00 02 60 00		/* 0x00 : 60 Hz */
+					29 00 00 00 00 00 02 53 20		/* Dimming Speed */
+					29 00 00 00 00 00 07 B7 01 5C CB 0D C0 16	/* ELVSS */
+					29 01 00 00 00 00 03 51 03 FF	/* 420 nit */
+					29 01 00 00 6E 00 03 F0 A5 A5
+					/* Wait 110ms(0x6E) */
+				];
+
+				qcom,mdss-dsi-off-command=[
+					05 01 00 00 14 00 02 28 00	/* wait 20ms(0x14) */
+					05 01 00 00 78 00 02 10 00
+				];
+
+				qcom,mdss-dsi-on-command-state = "dsi_hs_mode";  /* Magna DSC command only works in HS. */
+				qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
+
+				qcom,compression-mode = "dsc";
+				qcom,lm-split = <540 540>;
+				qcom,mdss-dsc-encoders = <2>;
+				qcom,mdss-dsc-slice-height = <40>;
+				qcom,mdss-dsc-slice-width = <540>;
+				qcom,mdss-dsc-slice-per-pkt = <1>;
+				qcom,mdss-dsc-bit-per-component = <8>;
+				qcom,mdss-dsc-bit-per-pixel = <8>;
+				qcom,mdss-dsc-block-prediction-enable;
+			};
 		};
 	};
 };

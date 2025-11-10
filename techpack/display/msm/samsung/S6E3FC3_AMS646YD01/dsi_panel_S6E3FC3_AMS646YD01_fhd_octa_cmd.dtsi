@@ -1570,6 +1570,129 @@
 				qcom,mdss-dsc-bit-per-pixel = <8>;
 				qcom,mdss-dsc-block-prediction-enable;
 			};
+			
+			fhd48 {
+				qcom,display-topology = <1 1 1>, <2 2 1>; // JUN_TEMP_R8
+				qcom,default-topology-index = <1>;  // JUN_TEMP_R8 : 0 => 1
+				qcom,mdss-dsi-timing-default;
+				qcom,mdss-dsi-panel-width = <1080>;
+				qcom,mdss-dsi-panel-height = <2400>;
+
+				qcom,mdss-dsi-h-pulse-width = <84>;
+				qcom,mdss-dsi-h-back-porch = <88>;
+				qcom,mdss-dsi-h-front-porch = <80>;
+				qcom,mdss-dsi-h-sync-skew = <0>;
+
+				qcom,mdss-dsi-v-pulse-width = <2>;
+				qcom,mdss-dsi-v-back-porch = <2>;
+				qcom,mdss-dsi-v-front-porch = <16>;
+
+				qcom,mdss-dsi-panel-framerate = <48>;
+				samsung,mdss-dsi-sot-hs-mode;
+
+				/* transfer time: 48Hz: 20032, 60Hz: 15866, 96Hz: 9616, 120Hz: 7533 */
+				qcom,mdss-mdp-transfer-time-us = <15866>;
+				qcom,mdss-dsi-panel-clockrate = <1108000000>; /* ((1080 * 2400 * 24 * 132.7492367) / 4 ) / 3 ~ 1.9G*/
+				//qcom,mdss-dsi-panel-phy-timings =[00 25 0A 0A 27 24 0A 0A 0A 02 04 00];
+				qcom,mdss-dsi-panel-phy-timings = [00 25 0A 0A 27 24 0A 0A 09 02 04 00 20 0F];
+				qcom,mdss-dsi-t-clk-pre = <0x20>;
+				qcom,mdss-dsi-t-clk-post = <0x0F>;
+
+				qcom,mdss-dsi-on-command = [
+					/* Sleep out, wait 30ms (0x1E) */
+					05 01 00 00 1E 00 02 11 00
+
+					29 00 00 00 00 00 03 F0 5A 5A
+
+					/* Global Para Setting */
+					29 00 00 00 00 00 2A F2
+						00 05 0E 58 54 01 0C 00
+						04 27 24 2F B0 0C 09 74
+						26 E4 0C 00 04 10 00 10
+						26 A8 10 00 10 10 3C 10
+						00 40 30 C8 00 C8 00 00
+						CE
+
+					/* TE Vsync On */
+					29 00 00 00 00 00 02 35 00
+
+					/* PAGE Address Setting */
+					29 00 00 00 00 00 05 2A 00 00 04 37
+					29 00 00 00 00 00 05 2B 00 00 09 5F
+
+					/* FFC Setting */
+
+					/* ERR_FG Setting */
+					29 00 00 00 00 00 02 E5 15
+					29 00 00 00 00 00 04 ED 44 4C 20
+
+					/* Vsync Setting */
+					29 00 00 00 00 00 04 B0 00 04 F2
+					29 00 00 00 00 00 02 F2 54
+
+					/* PCD  Setting */
+					29 00 00 00 00 00 03 CC 5C 51
+
+					/* DSC setting */
+					07 01 00 00 00 00 01 01		/* DSC enable :  Compression Mode*/
+					0A 01 00 00 00 00 80		/* PPS setting */
+						11 00 00 89 30 80 09 60
+						04 38 00 28 02 1C 02 1C
+						02 00 02 0E 00 20 03 DD
+						00 07 00 0C 02 77 02 8B
+						18 00 10 F0 03 0C 20 00
+						06 0B 0B 33 0E 1C 2A 38
+						46 54 62 69 70 77 79 7B
+						7D 7E 01 02 01 00 09 40
+						09 BE 19 FC 19 FA 19 F8
+						1A 38 1A 78 1A B6 2A F6
+						2B 34 2B 74 3B 74 6B F4
+						00 00 00 00 00 00 00 00
+						00 00 00 00 00 00 00 00
+						00 00 00 00 00 00 00 00
+						00 00 00 00 00 00 00 00
+						00 00 00 00 00 00 00 00
+
+					/* Freq setting */
+					29 00 00 00 00 00 04 B0 00 27 F2
+					29 00 00 00 00 00 02 F2 00
+
+					/* Porch Clock Set */
+					29 00 00 00 00 00 04 B0 00 2E F2
+					29 00 00 00 00 00 02 F2 55
+
+					29 00 00 00 00 00 04 B0 00 92 63
+					29 00 00 00 00 00 02 63 04	/* smooth dimming 4frame*/
+
+					29 00 00 00 00 00 02 F7 0F
+					29 01 00 00 5A 00 03 F0 A5 A5	/* wait 90ms (0x5A) */
+				];
+
+				qcom,mdss-dsi-off-command = [
+					/* DSC PPS cmd unlock & lock LEVEL0 KEY */
+					29 00 00 00 00 00 03 9F A5 A5
+					05 01 00 00 14 00 02 28 00 /* wait 20ms */
+					05 01 00 00 78 00 02 10 00 /* wait 120ms */
+					29 01 00 00 00 00 03 9F 5A 5A
+				];
+
+				qcom,mdss-dsi-on-command-state = "dsi_hs_mode";
+				qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
+
+				//qcom,partial-update-enabled = "single_roi";
+				// JUN_TEMP_R8 qcom,panel-roi-alignment=<1080 40 1080 40 1080 40>;
+
+				qcom,compression-mode = "dsc";
+				qcom,lm-split = <540 540>;
+				qcom,mdss-dsc-encoders = <2>;
+				qcom,mdss-dsc-slice-height = <40>;
+				qcom,mdss-dsc-slice-width = <540>;
+				qcom,mdss-dsc-slice-per-pkt = <1>;
+				qcom,mdss-dsc-bit-per-component = <8>;
+				qcom,mdss-pps-delay-ms = <0>;
+				qcom,mdss-dsc-bit-per-pixel = <8>;
+				qcom,mdss-dsc-block-prediction-enable;
+			};
 		};
 	};
 };

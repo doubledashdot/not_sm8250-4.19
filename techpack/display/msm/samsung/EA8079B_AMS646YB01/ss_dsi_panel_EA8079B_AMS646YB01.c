@@ -392,7 +392,8 @@ static struct dsi_panel_cmd_set *__ss_vrr(struct samsung_display_driver_data *vd
 		vrr_cmds->cmds[1].msg.tx_buf[1] = 0x10;
 	else
 		vrr_cmds->cmds[1].msg.tx_buf[1] = 0x00;
-
+		
+#if 0
 	if (vdd->vrr.adjusted_refresh_rate == 96) {
 		vrr_cmds->cmds[3].msg.tx_buf[1] = 0xA2;
 		vrr_cmds->cmds[3].msg.tx_buf[2] = 0x5C;
@@ -425,6 +426,7 @@ static struct dsi_panel_cmd_set *__ss_vrr(struct samsung_display_driver_data *vd
 		vrr_cmds->cmds[6].msg.tx_buf[6] = 0x40;
 	}
 	else { // 60/120 Hz
+#endif
 		vrr_cmds->cmds[3].msg.tx_buf[1] = 0xA9;
 		vrr_cmds->cmds[3].msg.tx_buf[2] = 0x70;
 
@@ -454,8 +456,9 @@ static struct dsi_panel_cmd_set *__ss_vrr(struct samsung_display_driver_data *vd
 		vrr_cmds->cmds[5].msg.tx_buf[24] = 0x14;
 
 		vrr_cmds->cmds[6].msg.tx_buf[6] = 0x20;
+#if 0
 	}
-
+#endif
 	LCD_INFO("VRR: %s, FPS: %dHz%s (cur: %d%s, target: %d%s)\n",
 			ss_get_brr_mode_name(brr_mode),
 			cur_rr,
