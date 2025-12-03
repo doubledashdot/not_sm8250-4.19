@@ -440,7 +440,7 @@ static inline void walt_dump(void)
 
 	printk_deferred("============ WALT RQ DUMP END ==============\n");
 }
-
+#ifdef CONFIG_BUG
 static int in_sched_bug;
 #define SCHED_BUG_ON(condition)				\
 ({							\
@@ -450,6 +450,9 @@ static int in_sched_bug;
 		BUG_ON(condition);			\
 	}						\
 })
+#else
+#define SCHED_BUG_ON do { } while (0);
+#endif
 
 static inline bool prefer_spread_on_idle(int cpu)
 {
