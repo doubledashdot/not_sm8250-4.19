@@ -4,7 +4,8 @@
 
 struct e404_attributes e404_data = {
     .kgsl_skip_zeroing = 0,
-    .file_sync = 1,
+    .file_sync = 0,
+    .avoid_dirty_pte = 1,
 };
 
 static struct kobject *e404_kobj;
@@ -33,10 +34,12 @@ static struct kobj_attribute name##_attr = __ATTR(name, 0664, name##_show, name#
 
 E404_ATTR_RW(kgsl_skip_zeroing);
 E404_ATTR_RW(file_sync);
+E404_ATTR_RW(avoid_dirty_pte);
 
 static struct attribute *e404_attrs[] = {
     &kgsl_skip_zeroing_attr.attr,
     &file_sync_attr.attr,
+    &avoid_dirty_pte_attr.attr,
     NULL,
 };
 
