@@ -7,3 +7,4 @@
 #include <linux/types.h>
 
 extern bool is_aosp __read_mostly;
+extern bool is_uos __read_mostly;
