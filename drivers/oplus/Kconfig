@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2018-2020 Oplus. All rights reserved.
+
+config OPLUS_STUB_NODES
+	bool "oplus missing nodes stubs"
+	default y
+	help
+	 Select this to enable dummy stubs for missing oplus procfs and sysfs nodes
