@@ -169,6 +169,9 @@ static int convert_adc_to_temper(struct sec_therm_info *info, unsigned int adc)
 	temp += temp2 /
 		(info->pdata->adc_table[low].adc -
 			info->pdata->adc_table[high].adc);
+			
+	// divide temperature by 2
+	temp = temp / 2;
 
 	return temp;
 }
