@@ -1,19 +1,22 @@
 name: build-kernel (DO NOT RUN ME STANDALONE)
 
 on:
-    workflow_call:
-        inputs:
-          device:
-            type: string
-            required: true
-          device_name:
-            type: string
-            required: true
-        secrets:
-          TELEGRAM_BOT_TOKEN:
-            required: true
-          TELEGRAM_CHAT_ID:
-            required: true
+  workflow_call:
+    inputs:
+      device:
+        type: string
+        required: true
+      device_name:
+        type: string
+        required: true
+    secrets:
+      TELEGRAM_BOT_TOKEN:
+        required: true
+      TELEGRAM_CHAT_ID:
+        required: true
+
+permissions:
+  contents: write
 
 jobs:
   build-kernel:
@@ -56,40 +59,70 @@ jobs:
           echo "BUILD_DURATION=${minutes}m ${seconds}s" >> $GITHUB_ENV
 
       - name: Set ZIP File Path
-        run: echo "zip_file=$(ls not-CI-*.zip | head -n1)" >> $GITHUB_ENV
-     
+        run: |
+         zip=$(ls not-CI-*.zip 2>/dev/null | head -n1)
+         if [ -z "$zip" ]; then
+           echo "❌ No ZIP found!"
+           exit 1
+         fi
+         echo "zip_file=$zip" >> $GITHUB_ENV
+
       - name: Set release tag
-        run: echo "RELEASE_TAG=kernel-${DEVICE}-$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
-        
+        run: echo "RELEASE_TAG=kernel-${DEVICE}-$(date +'%Y%m%d-%H%M')" >> $GITHUB_ENV
+
       - name: Prepare Release Info
         run: |
-           echo "KERNEL_VERSION=$(cat out/include/config/kernel.release)" >> $GITHUB_ENV
-           echo "BUILD_DATE=$(date +'%d %B %Y')" >> $GITHUB_ENV
-           echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          set -e
+          echo "KERNEL_VERSION=$(cat out/include/config/kernel.release)" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date +'%d %B %Y')" >> $GITHUB_ENV
+          echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "CLANG_VERSION=$(${{ github.workspace }}/tc/clang/bin/clang --version | head -n1)" >> $GITHUB_ENV
+          KSU_VERSION=$(grep -m1 'KSU_VERSION' -r ./KernelSU/kernel/Makefile | sed -E 's/.*KSU_VERSION=([0-9]+).*/\1/')
+          [ -z "$KSU_VERSION" ] && KSU_VERSION="Unknown"
+          echo "KSU_VERSION=$KSU_VERSION" >> $GITHUB_ENV
+          git -C KernelSU fetch --tags 2>/dev/null || true
+          KSU_VERSION_STR=$(git -C KernelSU describe --tags --always 2>/dev/null)
+          [ -z "$KSU_VERSION_STR" ] && KSU_VERSION_STR="Unknown"
+          echo "KSU_VERSION_STR=$KSU_VERSION_STR" >> $GITHUB_ENV
+          SUSFS_VERSION=$(grep -m1 'SUSFS_VERSION' ./include/linux/susfs.h 2>/dev/null | awk -F'"' '{print $2}')
+          [ -z "$SUSFS_VERSION" ] && SUSFS_VERSION="Unknown"
+          echo "SUSFS_VERSION=$SUSFS_VERSION" >> $GITHUB_ENV
 
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Generate Changelog
+        run: |
+          BASE=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          CHANGELOG=$(if [ -z "$BASE" ]; then
+            git log -25 --pretty=format:"- %s"
+          else
+            git log -25 ${BASE}..HEAD --pretty=format:"- %s"
+          fi)
+
+          {
+            echo "CHANGELOG<<EOF"
+            echo "$CHANGELOG"
+            echo "EOF"
+          } >> $GITHUB_ENV
+
+      - name: Debug ZIP
+        run: ls -lh
+
+      - name: Create Release and Upload ZIP
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
-          release_name: "Kernel Build for ${{ env.DEVICE_NAME }}"
+          name: not_kernel ${{ env.KERNEL_VERSION }} for ${{ env.DEVICE_NAME }}
+          files: ${{ env.zip_file }}
           body: |
-            Localversion: ${{ env.KERNEL_VERSION }}
-            Clang version: kernel.org LLVM 22.1.3
-            Build Date: ${{ env.BUILD_DATE }}
-            Build commit hash: ${{ env.COMMIT_HASH }}
-            KernelSU version: 32468 / 3.2.4-15
-            SusFS version: v2.1.0
-            SELinux: Enforcing
-          draft: false
-          prerelease: false
+             Clang version: ${{ env.CLANG_VERSION }}
+             Build Date: ${{ env.BUILD_DATE }}
+             KernelSU version: ${{ env.KSU_VERSION }} / ${{ env.KSU_VERSION_STR }}
+             SusFS version: ${{ env.SUSFS_VERSION }}
+             SELinux: Enforcing
+             Commit: ${{ env.COMMIT_HASH }}
+             Build completed in: ${{ env.BUILD_DURATION }}
+              
+              ## Changelog:
+              ${{ env.CHANGELOG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.zip_file }}
-          asset_name: "kernel-${{ env.DEVICE }}.zip"
-          asset_content_type: application/zip
