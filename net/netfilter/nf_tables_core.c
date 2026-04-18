@@ -23,6 +23,7 @@
 #include <net/netfilter/nf_tables.h>
 #include <net/netfilter/nf_log.h>
 
+#ifdef CONFIG_NF_TABLES_TRACE
 static noinline void __nft_trace_packet(struct nft_traceinfo *info,
 					const struct nft_chain *chain,
 					enum nft_trace_types type)
@@ -37,16 +38,19 @@ static noinline void __nft_trace_packet(struct nft_traceinfo *info,
 
 	nft_trace_notify(info);
 }
+#endif
 
 static inline void nft_trace_packet(struct nft_traceinfo *info,
 				    const struct nft_chain *chain,
 				    const struct nft_rule *rule,
 				    enum nft_trace_types type)
 {
+#ifdef CONFIG_NF_TABLES_TRACE
 	if (static_branch_unlikely(&nft_trace_enabled)) {
 		info->rule = rule;
 		__nft_trace_packet(info, chain, type);
 	}
+#endif
 }
 
 static void nft_cmp_fast_eval(const struct nft_expr *expr,
@@ -151,8 +155,10 @@ nft_do_chain(struct nft_pktinfo *pkt, void *priv)
 	struct nft_traceinfo info;
 
 	info.trace = false;
+#ifdef CONFIG_NF_TABLES_TRACE
 	if (static_branch_unlikely(&nft_trace_enabled))
 		nft_trace_init(&info, pkt, &regs.verdict, basechain);
+#endif
 do_chain:
 	if (genbit)
 		rules = rcu_dereference(chain->rules_gen_1);
