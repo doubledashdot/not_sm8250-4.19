@@ -159,9 +159,9 @@ static ssize_t cpu_capacity_show(struct device *dev,
 			strnlen(current->comm, TASK_COMM_LEN)) == 0) {
 		unsigned long curr, left, right;
 
-		curr = topology_get_cpu_scale(NULL, cpu->dev.id);
-		left = topology_get_cpu_scale(NULL, 0);
-		right = topology_get_cpu_scale(NULL, num_possible_cpus() - 1);
+		curr = topology_get_cpu_scale(cpu->dev.id);
+		left = topology_get_cpu_scale(0);
+		right = topology_get_cpu_scale(num_possible_cpus() - 1);
 
 		if (curr != left && curr != right)
 			return sprintf(buf, "%lu\n", left > right ? left : right);
