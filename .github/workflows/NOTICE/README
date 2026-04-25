@@ -1,23 +1,29 @@
 NOTICE:
 
-not_kernel supports the following devices:
+not_kernel supports the following device:
 
 r8q - Galaxy S20 FE
-x1q - Galaxy S20 5G
-y2q - Galaxy S20+ 5G
-z3q - Galaxy S20 Ultra
-c1q - Galaxy Note 20
-c2q - Galaxy Note 20 Ultra
-gts7l - Galaxy Tab S7 (LTE)
-gts7lwifi - Galaxy Tab S7 (WIFI)
-gts7xl - Galaxy Tab S7+ (LTE)
-gts7xlwifi - Galaxy Tab S7+ (WIFI)
 
 Unsupported:
 bloomxq - Galaxy Z Flip 5G
 f2q - Galaxy Z Fold2 5G
 
 * these two don't even have proper twrp in xda.
+
+x1q - Galaxy S20 5G
+y2q - Galaxy S20+ 5G
+z3q - Galaxy S20 Ultra
+c1q - Galaxy Note 20
+c2q - Galaxy Note 20 Ultra
+
+* These two above use broadcom wifi which is broken, and my workaround doesnt work anymore
+
+gts7l - Galaxy Tab S7 (LTE)
+gts7lwifi - Galaxy Tab S7 (WIFI)
+gts7xl - Galaxy Tab S7+ (LTE)
+gts7xlwifi - Galaxy Tab S7+ (WIFI)
+
+* I mean, i already dropped all others, why would i maintain the tabs, anyway the kernel is 100% functional for them tho
 
 To build with workflows:
 Just call the codename.yml and it will build the kernel for that phone/tablet.
