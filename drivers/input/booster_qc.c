@@ -1,6 +1,7 @@
 #include <linux/input/input_booster.h>
 #include <linux/msm-bus.h>
 #include <linux/msm-bus-board.h>
+#include <linux/device.h>
 
 u32 bus_hdl = 0;
 struct pm_qos_request lpm_bias_pm_qos_request;
@@ -147,6 +148,109 @@ void ib_release_booster(long *rel_flags)
 	}
 }
 
+#include <linux/device.h>
+#include <linux/sysfs.h>
+#include <linux/module.h>
+
+static struct class *ib_class;
+
+static struct device *touch_dev;
+static struct device *mt_dev;
+static struct device *core_dev;
+
+static int ib_mode_state;
+static int touch_head;
+static int touch_tail;
+static int touch_level;
+static int mt_touch_head;
+static int mt_touch_tail;
+
+#define IB_ATTR(_name, _var) \
+static ssize_t _name##_show(struct device *dev, \
+	struct device_attribute *attr, char *buf) \
+{ \
+	return sprintf(buf, "%d\n", _var); \
+} \
+static ssize_t _name##_store(struct device *dev, \
+	struct device_attribute *attr, \
+	const char *buf, size_t count) \
+{ \
+	kstrtoint(buf, 0, &_var); \
+	return count; \
+} \
+static DEVICE_ATTR(_name, 0664, _name##_show, _name##_store);
+
+IB_ATTR(head, touch_head);
+IB_ATTR(tail, touch_tail);
+IB_ATTR(level, touch_level);
+
+IB_ATTR(mt_head, mt_touch_head);
+IB_ATTR(mt_tail, mt_touch_tail);
+
+IB_ATTR(ib_mode_state, ib_mode_state);
+
+static int input_booster_sysfs_init(void)
+{
+	pr_info("IB: creating class\n");
+	ib_class = class_create(NULL, "input_booster");
+	if (IS_ERR(ib_class)) {
+		pr_err("IB: class_create failed: %ld\n", PTR_ERR(ib_class));
+		return PTR_ERR(ib_class);
+	}
+	pr_info("IB: class created\n");
+
+	/* touch device */
+	touch_dev = device_create(ib_class, NULL, 0, NULL, "touch");
+	if (IS_ERR(touch_dev))
+		goto err_touch;
+
+	/* multitouch device */
+	mt_dev = device_create(ib_class, NULL, 1, NULL, "multitouch");
+	if (IS_ERR(mt_dev))
+		goto err_mt;
+
+	/* core device (global state) */
+	core_dev = device_create(ib_class, NULL, 2, NULL, "core");
+	if (IS_ERR(core_dev))
+		goto err_core;
+
+	/* touch sysfs */
+	device_create_file(touch_dev, &dev_attr_head);
+	device_create_file(touch_dev, &dev_attr_tail);
+	device_create_file(touch_dev, &dev_attr_level);
+
+	/* multitouch sysfs */
+	device_create_file(mt_dev, &dev_attr_mt_head);
+	device_create_file(mt_dev, &dev_attr_mt_tail);
+
+	/* global sysfs */
+	device_create_file(core_dev, &dev_attr_ib_mode_state);
+
+	return 0;
+
+err_core:
+	device_destroy(ib_class, 1);
+err_mt:
+	device_destroy(ib_class, 0);
+err_touch:
+	pr_err("IB: touch device create failed\n");
+	class_destroy(ib_class);
+	return -ENOMEM;
+}
+
+static void input_booster_sysfs_exit(void)
+{
+	if (!ib_class)
+		return;
+
+	device_destroy(ib_class, 2);
+	device_destroy(ib_class, 1);
+	device_destroy(ib_class, 0);
+
+	class_destroy(ib_class);
+	ib_class = NULL;
+}
+
 void input_booster_init_vendor(int* release_val)
 {
 	int i = 0;
@@ -165,10 +269,14 @@ void input_booster_init_vendor(int* release_val)
 	for (i = 0; i < MAX_RES_COUNT; i++) {
 		release_value[i] = release_val[i];
 	}
+	
+	input_booster_sysfs_init();
 }
 
 void input_booster_exit_vendor(void)
 {
+	input_booster_sysfs_exit();
+
 	//msm_bus_scale_unregister_client(bus_hdl);
 	pm_qos_remove_request(&lpm_bias_pm_qos_request);
 }
@@ -203,3 +311,14 @@ void set_hmp(int level)
 	pr_booster("It does not use hmp\n");
 }
 #endif
+
+static int default_release_values[MAX_RES_COUNT] = {0};
+static int __init input_booster_init(void)
+{
+    pr_info("input_booster: late init start\n");
+    input_booster_init_vendor(default_release_values); // or whatever you pass
+    pr_info("input_booster: late init done\n");
+    return 0;
+}
+
+late_initcall(input_booster_init);

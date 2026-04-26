@@ -243,8 +243,6 @@ void ib_release_booster(long *rel_flags);
 void ib_set_booster(int* qos_values);
 unsigned int create_uniq_id(int type, int code, int slot);
 
-void input_booster_init(void);
-
 void init_sysfs_device(struct class* sysfs_class, struct t_ib_device_tree* ib_dt);
 
 void input_booster_init_vendor(int* release_val);
