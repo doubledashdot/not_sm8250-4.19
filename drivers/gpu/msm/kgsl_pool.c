@@ -305,7 +305,7 @@ int kgsl_pool_alloc_page(int *page_size, struct page **pages,
 				return -ENOMEM;
 		}
 #ifdef CONFIG_E404_SIGNATURE
-		if (e404_data.e404_kgsl_skip_zeroing == 0)
+		if (e404_data.kgsl_skip_zeroing == 0)
 			kgsl_zero_page(page, order);
 #else
 		kgsl_zero_page(page, order);
@@ -330,7 +330,7 @@ int kgsl_pool_alloc_page(int *page_size, struct page **pages,
 			if (page == NULL)
 				return -ENOMEM;
 #ifdef CONFIG_E404_SIGNATURE
-			if (e404_data.e404_kgsl_skip_zeroing == 0)
+			if (e404_data.kgsl_skip_zeroing == 0)
 				kgsl_zero_page(page, order);
 #else
 			kgsl_zero_page(page, order);
@@ -373,7 +373,7 @@ int kgsl_pool_alloc_page(int *page_size, struct page **pages,
 				return -ENOMEM;
 		}
 #ifdef CONFIG_E404_SIGNATURE
-		if (e404_data.e404_kgsl_skip_zeroing == 0)
+		if (e404_data.kgsl_skip_zeroing == 0)
 			kgsl_zero_page(page, order);
 #else
 		kgsl_zero_page(page, order);

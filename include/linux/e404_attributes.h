@@ -8,7 +8,7 @@
 #include <linux/sysfs.h>
 
 struct e404_attributes {
-    int e404_kgsl_skip_zeroing;
+    int kgsl_skip_zeroing;
 };
 
 extern struct e404_attributes e404_data;

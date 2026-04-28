@@ -3,7 +3,7 @@
 #include <linux/e404_attributes.h>
 
 struct e404_attributes e404_data = {
-    .e404_kgsl_skip_zeroing = 0,
+    .kgsl_skip_zeroing = 0,
 };
 
 static struct kobject *e404_kobj;
@@ -30,10 +30,10 @@ static ssize_t name##_store(struct kobject *kobj, struct kobj_attribute *attr, c
 } \
 static struct kobj_attribute name##_attr = __ATTR(name, 0664, name##_show, name##_store);
 
-E404_ATTR_RW(e404_kgsl_skip_zeroing);
+E404_ATTR_RW(kgsl_skip_zeroing);
 
 static struct attribute *e404_attrs[] = {
-    &e404_kgsl_skip_zeroing_attr.attr,
+    &kgsl_skip_zeroing_attr.attr,
     NULL,
 };
 
