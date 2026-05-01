@@ -90,7 +90,7 @@ ZIPNAME="not-CI-$(date '+%Y%m%d').zip"
 TC_DIR="$(pwd)/tc/clang"
 PLATFORM_DEFCONFIG="vendor/kona-not_defconfig"
 COMMON_DEFCONFIG="vendor/samsung/kona-sec-not.config"
-NOT_DEFCONFIG="vendor/not/nethunter.config vendor/not/droidspace.config" #Additional configs available on vendor/not/
+NOT_DEFCONFIG="vendor/not/ksu.config vendor/not/nethunter.config vendor/not/droidspace.config" #Additional configs available on vendor/not/
 DEFCONFIG="$PLATFORM_DEFCONFIG $COMMON_DEFCONFIG $PROJECT_CONFIG $NOT_DEFCONFIG"
 
 OUT_DIR="$(pwd)/out"
