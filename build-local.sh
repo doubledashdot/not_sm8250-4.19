@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 SECONDS=0 # builtin bash timer
 
 GREEN='\033[0;32m'
@@ -15,7 +17,10 @@ EUR_MODELS=("r8q" "gts7l" "gts7lwifi" "gts7xl" "gts7xlwifi" "f2q" "bloomxq")
 # Available regions
 VALID_REGIONS=("eur" "kor" "chn" "usa")
 
-# Prompt function for cleaner code
+# Available build types
+VALID_BUILDS=("ci" "droidspaces" "perf" "recovery")
+
+# Prompt function
 prompt() {
     echo "=============================================="
     echo "$1"
@@ -27,20 +32,21 @@ prompt() {
     echo "=============================================="
 }
 
-# Function to validate input
+# Validate input
 validate_choice() {
     local choice="$1"
     shift
     local valid_values=("$@")
-    
+
     for value in "${valid_values[@]}"; do
         if [[ "$choice" == "$value" ]]; then
             return 0
         fi
     done
-    
+
     return 1
 }
+
 
 # Model selection
 prompt "Which project do you want to build?" "${VALID_MODELS[@]}"
@@ -52,25 +58,41 @@ if ! validate_choice "$model_choice" "${VALID_MODELS[@]}"; then
     exit 1
 fi
 
-# Check EUR region restriction
-if [[ "$region_choice" == "eur" && " ${EUR_MODELS[*]} " =~ " $model_choice " ]]; then
+
+# Region selection
+prompt "Select region (or press enter for default)" "${VALID_REGIONS[@]}"
+read -p " - Enter your choice: " region_choice
+region_choice=$(echo "$region_choice" | tr '[:upper:]' '[:lower:]')
+
+if [[ -n "$region_choice" ]] && ! validate_choice "$region_choice" "${VALID_REGIONS[@]}"; then
+    echo "Invalid region choice! Exiting."
+    exit 1
+fi
+
+# EUR restriction logic
+if [[ "$region_choice" == "eur" && ! " ${EUR_MODELS[*]} " =~ " $model_choice " ]]; then
     echo "=============================================="
-    echo "Error: This project doesn't support the EUR region."
+    echo "Error: This model doesn't support the EUR region."
     echo "=============================================="
     exit 1
 fi
 
-echo "=============================================="
-echo "Configuration Summary:"
-echo "Model: $model_choice"
-echo "Region: ${region_choice:-default}"
-echo "=============================================="
+
+# Build type selection
+prompt "Which build type do you want? (ci is the default)" "${VALID_BUILDS[@]}"
+read -p " - Enter your choice: " build_choice
+build_choice=$(echo "$build_choice" | tr '[:upper:]' '[:lower:]')
+
+if ! validate_choice "$build_choice" "${VALID_BUILDS[@]}"; then
+    echo "Invalid build type! Exiting."
+    exit 1
+fi
+
 
 # Target properties
 MODEL=$model_choice
 REGION=$region_choice
 
-# Kona platform now belongs to platform 11
 export PROJECT_NAME="${MODEL}"
 [ -z "${PLATFORM_VERSION}" ] && export PLATFORM_VERSION=11
 
@@ -81,22 +103,47 @@ else
 fi
 
 
-# ===== AnyKernel3 =====
+# Build configuration switch
+case "$build_choice" in
+    ci)
+        ZIPNAME="not-ci-$(date '+%Y%m%d').zip"
+        PLATFORM_DEFCONFIG="vendor/kona-not_defconfig"
+        COMMON_DEFCONFIG="vendor/samsung/kona-sec-not.config"
+        EXTRA_CONFIG="vendor/not/ksu.config"
+        ;;
+    droidspaces)
+        ZIPNAME="not-droidspaces-$(date '+%Y%m%d').zip"
+        PLATFORM_DEFCONFIG="vendor/kona-not_defconfig"
+        COMMON_DEFCONFIG="vendor/samsung/kona-sec-not.config"
+        EXTRA_CONFIG="vendor/not/ksu.config vendor/not/nethunter.config vendor/not/droidspace.config"
+        ;;
+    recovery)
+        ZIPNAME="not-recovery-$(date '+%Y%m%d').zip"
+        PLATFORM_DEFCONFIG="vendor/kona-not_defconfig"
+        COMMON_DEFCONFIG="vendor/samsung/kona-sec-not.config"
+        EXTRA_CONFIG="vendor/not/no_qcacld.config vendor/not/recovery.config"
+        ;;
+    perf)
+        ZIPNAME="not-perf-$(date '+%Y%m%d').zip"
+        PLATFORM_DEFCONFIG="vendor/kona-perf_defconfig"
+        COMMON_DEFCONFIG="vendor/samsung/kona-sec-common.config"
+        EXTRA_CONFIG=""
+        ;;
+esac
+
+DEFCONFIG="$PLATFORM_DEFCONFIG $COMMON_DEFCONFIG $PROJECT_CONFIG $EXTRA_CONFIG"
+
+
+# Paths
 AK3_REPO="https://github.com/skye-tachyon/AnyKernel3"
 AK3_BRANCH="$MODEL"
-AK3_DIR="$(pwd)/android/AnyKernel3"
 
-ZIPNAME="not-CI-$(date '+%Y%m%d').zip"
 TC_DIR="$(pwd)/tc/clang"
-PLATFORM_DEFCONFIG="vendor/kona-not_defconfig"
-COMMON_DEFCONFIG="vendor/samsung/kona-sec-not.config"
-NOT_DEFCONFIG="vendor/not/ksu.config vendor/not/nethunter.config vendor/not/droidspace.config" #Additional configs available on vendor/not/
-DEFCONFIG="$PLATFORM_DEFCONFIG $COMMON_DEFCONFIG $PROJECT_CONFIG $NOT_DEFCONFIG"
-
 OUT_DIR="$(pwd)/out"
 BOOT_DIR="$OUT_DIR/arch/arm64/boot"
 DTS_DIR="$BOOT_DIR/dts/vendor/qcom"
 
+# smth
 if test -z "$(git rev-parse --show-cdup 2>/dev/null)" &&
    head=$(git rev-parse --verify HEAD 2>/dev/null); then
     ZIPNAME="${ZIPNAME::-4}-$(echo $head | cut -c1-8)-$MODEL.zip"
@@ -106,113 +153,75 @@ git submodule update --init --recursive
 
 export PATH="$TC_DIR/bin:$PATH"
 
+
+# Toolchain setup
 if ! [ -d "$TC_DIR" ]; then
-    echo -e "${YELLOW}Clang not found! Cloning to $TC_DIR...${NC}"
-    echo "=============================================="
+    echo -e "${YELLOW}Clang not found! Downloading...${NC}"
     mkdir -p "$TC_DIR"
     if ! curl -L https://www.kernel.org/pub/tools/llvm/files/llvm-22.1.4-x86_64.tar.gz \
         | tar -xz -C "$TC_DIR" --strip-components=1; then
-        echo ""
-        echo "=============================================="
-        echo -e "${RED}Cloning failed! Aborting...${NC}"
-        echo "=============================================="
+        echo -e "${RED}Download failed!${NC}"
         exit 1
     fi
-    echo -e "${GREEN}Cloning complete!${NC}"
-    echo "=============================================="
+    echo -e "${GREEN}Clang ready!${NC}"
 fi
 
 mkdir -p out
-echo -e "${BLUE}building with: $DEFCONFIG${NC}"
-echo "=============================================="
+
+echo -e "${BLUE}Building with: $DEFCONFIG${NC}"
 
 make O=out ARCH=arm64 $DEFCONFIG
 make O=out ARCH=arm64 olddefconfig
 
-echo ""
-echo "=============================================="
-echo -e "\n${GREEN}Starting compilation...${NC}\n"
-echo "=============================================="
-echo "Build Info"
-echo "=============================================="
-echo "Project: $PROJECT_NAME"
-echo "Platform config: $PLATFORM_DEFCONFIG"
-echo "Common config: $COMMON_DEFCONFIG"
-echo "Project config: $PROJECT_CONFIG"
-echo "Additional config: $NOT_DEFCONFIG"
-echo "Output directory: $OUT_DIR"
-echo "=============================================="
-echo ""
+# Common make flags
+MAKE_ARGS="-j$(nproc --all) O=out ARCH=arm64 \
+CC=clang LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm \
+OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip \
+CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+LLVM=1 LLVM_IAS=1"
 
-make -j$(nproc --all) O=out ARCH=arm64 \
-    CC=clang LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm \
-    OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip \
-    CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-    LLVM=1 LLVM_IAS=1 dtbo.img
-    
-make -j$(nproc --all) O=out ARCH=arm64 \
-    CC=clang LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm \
-    OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip \
-    CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-    LLVM=1 LLVM_IAS=1 Image
+echo -e "\n${GREEN}Starting compilation...${NC}"
+
+make $MAKE_ARGS dtbo.img
+make $MAKE_ARGS Image.gz
 
 
-if [ -f "$BOOT_DIR/Image" ]; then
-    echo "================================="
-    echo -e "${GREEN}Kernel Image found!${NC}"
-    echo "================================="
-
-    if [ -d "$DTS_DIR" ]; then
-        echo -e "${BLUE}Generating dtb from $DTS_DIR...${NC}"
-        cat $(find "$DTS_DIR" -type f -name "*.dtb" | sort) > "$BOOT_DIR/kona.dtb"
-        echo "================================="
-
-        if [ -f "$BOOT_DIR/kona.dtb" ]; then
-            echo ""
-            echo "================================="
-            echo -e "${GREEN}kona.dtb/dtbo.img generated successfully!${NC}"
-            echo "================================="
-        else
-            echo ""
-            echo "================================="
-            echo -e "${RED}Failed to generate kona.dtb! Check if dtbs were compiled.${NC}"
-            echo "================================="
-            exit 1
-        fi
-    else
-        echo ""
-        echo "================================="
-        echo -e "${RED}DTS directory not found. Compilation might be incomplete.${NC}"
-        echo ""
-        echo "================================="
-        exit 1
-    fi
-else
-    echo ""
-    echo "${RED}=================================${NC}"
-    echo -e "\n${RED}Compilation failed! Image not found.${NC}"
-    echo "${RED}=================================${NC}"
+# Post build checks
+if [ ! -f "$BOOT_DIR/Image.gz" ]; then
+    echo -e "${RED}Compilation failed!${NC}"
     exit 1
 fi
 
+echo -e "${GREEN}Kernel Image found!${NC}"
+
+if [ ! -d "$DTS_DIR" ]; then
+    echo -e "${RED}DTS directory missing!${NC}"
+    exit 1
+fi
+
+echo -e "${BLUE}Generating DTB...${NC}"
+cat $(find "$DTS_DIR" -name "*.dtb" | sort) > "$BOOT_DIR/kona.dtb"
+
+if [ ! -f "$BOOT_DIR/kona.dtb" ]; then
+    echo -e "${RED}DTB generation failed!${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}DTB + DTBO ready!${NC}"
+
+
+# AK3
 rm -rf AnyKernel3
-echo "[*] Cloning AnyKernel3 for $MODEL"
-echo "================================="
+echo "[*] Cloning AnyKernel3..."
 git clone -q -b "$AK3_BRANCH" "$AK3_REPO" AnyKernel3 || exit 1
 
-echo -e "Preparing zip..."
-echo -e "================================="
-
-cp "$BOOT_DIR/dtbo.img" AnyKernel3/dtbo.img
-cp "$BOOT_DIR/Image" AnyKernel3/Image
-cp "$BOOT_DIR/kona.dtb" AnyKernel3/kona.dtb
+cp "$BOOT_DIR/dtbo.img" AnyKernel3/
+cp "$BOOT_DIR/Image.gz" AnyKernel3/
+cp "$BOOT_DIR/kona.dtb" AnyKernel3/
 
 cd AnyKernel3
-
 zip -r9 "../$ZIPNAME" * -x .git README.md *placeholder
 cd ..
 
-echo -e "================================="
-echo -e "\n${GREEN}Completed in $((SECONDS / 60)) minute(s) and $((SECONDS % 60)) second(s)!${NC}"
+echo -e "\n${GREEN}Completed in $((SECONDS / 60))m $((SECONDS % 60))s${NC}"
 echo -e "${GREEN}Zip: $ZIPNAME${NC}"
-echo -e "================================="
