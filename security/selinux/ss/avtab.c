@@ -27,6 +27,12 @@
 static struct kmem_cache *avtab_node_cachep;
 static struct kmem_cache *avtab_xperms_cachep;
 
+static inline int avtab_hash(struct avtab_key *keyp, u32 mask)
+{
+	return av_hash((u32)keyp->target_class, (u32)keyp->target_type,
+		       (u32)keyp->source_type, mask);
+}
+
 static struct avtab_node*
 avtab_insert_node(struct avtab *h, int hvalue,
 		  struct avtab_node *prev, struct avtab_node *cur,
