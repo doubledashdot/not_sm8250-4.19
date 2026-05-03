@@ -182,6 +182,8 @@ LLVM=1 LLVM_IAS=1"
 
 echo -e "\n${GREEN}Starting compilation...${NC}"
 
+rm -rf out/arch/arm64/boot #ok
+
 make $MAKE_ARGS dtbo.img
 make $MAKE_ARGS Image.gz
 
