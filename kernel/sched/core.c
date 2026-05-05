@@ -4233,6 +4233,7 @@ void scheduler_tick(void)
 	update_task_ravg(rq->curr, rq, TASK_UPDATE, wallclock, 0);
 #endif
 	update_rq_clock(rq);
+	fie_tick_entry();
 	thermal_pressure = arch_scale_thermal_pressure(cpu_of(rq));
 	update_thermal_load_avg(rq_clock_thermal(rq), rq, thermal_pressure);
 	curr->sched_class->task_tick(rq, curr, 0);
