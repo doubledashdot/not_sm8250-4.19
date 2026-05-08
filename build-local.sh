@@ -18,7 +18,9 @@ EUR_MODELS=("r8q" "gts7l" "gts7lwifi" "gts7xl" "gts7xlwifi" "f2q" "bloomxq")
 VALID_REGIONS=("eur" "kor" "chn" "usa")
 
 # Available build types
-VALID_BUILDS=("ci" "droidspaces" "perf" "recovery")
+VALID_BUILDS=("ci" "perf" "recovery")
+
+VALID_ADDITIONALS=("none" "ksu" "nethunter" "droidspaces" "droidspaces+nethunter")
 
 # Prompt function
 prompt() {
@@ -79,7 +81,7 @@ fi
 
 
 # Build type selection
-prompt "Which build type do you want? (ci is the default)" "${VALID_BUILDS[@]}"
+prompt "Which build type do you want?" "${VALID_BUILDS[@]}"
 read -p " - Enter your choice: " build_choice
 build_choice=$(echo "$build_choice" | tr '[:upper:]' '[:lower:]')
 
@@ -88,6 +90,15 @@ if ! validate_choice "$build_choice" "${VALID_BUILDS[@]}"; then
     exit 1
 fi
 
+# Aditional configs selection
+prompt "Which aditionals do you want to include in the kernel? (select none for no ksu, every other option has it)" "${VALID_ADDITIONALS[@]}"
+read -p " - Enter your choice: " add_choice
+add_choice=$(echo "$add_choice" | tr '[:upper:]' '[:lower:]')
+
+if ! validate_choice "$add_choice" "${VALID_ADDITIONALS[@]}"; then
+    echo "Invalid build add-on! Exiting."
+    exit 1
+fi
 
 # Target properties
 MODEL=$model_choice
@@ -106,28 +117,49 @@ fi
 # Build configuration switch
 case "$build_choice" in
     ci)
-        ZIPNAME="not-ci-$(date '+%Y%m%d').zip"
+        ZIPNAME="ci-$(date '+%Y%m%d').zip"
         PLATFORM_DEFCONFIG="vendor/kona-not_defconfig"
         COMMON_DEFCONFIG="vendor/samsung/kona-sec-not.config"
-        EXTRA_CONFIG="vendor/not/ksu.config"
-        ;;
-    droidspaces)
-        ZIPNAME="not-droidspaces-$(date '+%Y%m%d').zip"
-        PLATFORM_DEFCONFIG="vendor/kona-not_defconfig"
-        COMMON_DEFCONFIG="vendor/samsung/kona-sec-not.config"
-        EXTRA_CONFIG="vendor/not/ksu.config vendor/not/nethunter.config vendor/not/droidspace.config"
         ;;
     recovery)
-        ZIPNAME="not-recovery-$(date '+%Y%m%d').zip"
+        ZIPNAME="recovery-$(date '+%Y%m%d').zip"
         PLATFORM_DEFCONFIG="vendor/kona-not_defconfig"
         COMMON_DEFCONFIG="vendor/samsung/kona-sec-not.config"
         EXTRA_CONFIG="vendor/not/no_qcacld.config vendor/not/recovery.config"
         ;;
     perf)
-        ZIPNAME="not-perf-$(date '+%Y%m%d').zip"
+        ZIPNAME="perf-$(date '+%Y%m%d').zip"
         PLATFORM_DEFCONFIG="vendor/kona-perf_defconfig"
         COMMON_DEFCONFIG="vendor/samsung/kona-sec-common.config"
-        EXTRA_CONFIG=""
+        ;;
+esac
+
+# Additionals configurations switch
+case "$add_choice" in
+    none)
+        ZIPNAME="not-$ZIPNAME"
+        ;;
+    ksu)
+        ZIPNAME="not-ksu-$ZIPNAME"
+        EXTRA_CONFIG="$EXTRA_CONFIG vendor/not/ksu.config"
+        ;;
+    nethunter)
+        ZIPNAME="not-nethunter-$ZIPNAME"
+        PLATFORM_DEFCONFIG="vendor/kona-not_defconfig"
+        COMMON_DEFCONFIG="vendor/samsung/kona-sec-not.config"
+        EXTRA_CONFIG="$EXTRA_CONFIG vendor/not/ksu.config vendor/not/nethunter.config"
+        ;;
+    droidspaces)
+        ZIPNAME="not-droidspaces-$ZIPNAME"
+        PLATFORM_DEFCONFIG="vendor/kona-not_defconfig"
+        COMMON_DEFCONFIG="vendor/samsung/kona-sec-not.config"
+        EXTRA_CONFIG="$EXTRA_CONFIG vendor/not/ksu.config vendor/not/droidspace.config"
+        ;;
+    droidspaces+nethunter)
+        ZIPNAME="not-droidspaces-$ZIPNAME"
+        PLATFORM_DEFCONFIG="vendor/kona-not_defconfig"
+        COMMON_DEFCONFIG="vendor/samsung/kona-sec-not.config"
+        EXTRA_CONFIG="$EXTRA_CONFIG vendor/not/ksu.config vendor/not/nethunter.config vendor/not/droidspace.config"
         ;;
 esac
 
@@ -220,6 +252,9 @@ git clone -q -b "$AK3_BRANCH" "$AK3_REPO" AnyKernel3 || exit 1
 cp "$BOOT_DIR/dtbo.img" AnyKernel3/
 cp "$BOOT_DIR/Image.gz" AnyKernel3/
 cp "$BOOT_DIR/kona.dtb" AnyKernel3/
+
+# remove older builds
+rm -rf *.zip
 
 cd AnyKernel3
 zip -r9 "../$ZIPNAME" * -x .git README.md *placeholder
