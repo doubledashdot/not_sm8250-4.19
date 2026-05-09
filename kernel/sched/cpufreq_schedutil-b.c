@@ -145,7 +145,8 @@ static unsigned int get_next_freq(struct sugov_policy *sg_policy,
 	struct cpufreq_policy *policy = sg_policy->policy;
 	unsigned int freq = arch_scale_freq_invariant() ?
 				policy->cpuinfo.max_freq : policy->cur;
-	unsigned int idx, l_freq, h_freq;
+	unsigned int idx, l_freq, h_freq, cap_freq;
+	unsigned int cpu = cpumask_first(policy->cpus);
 	unsigned long next_freq = 0;
 
 	util = map_util_perf(util);
@@ -153,6 +154,22 @@ static unsigned int get_next_freq(struct sugov_policy *sg_policy,
 		freq = next_freq;
 	else
 		freq = map_util_freq(util, freq, max);
+
+	/*
+	 * I am setting the cap_freq equal to the frequencies
+	 * that were marked as the overall efficient ones
+	 * according to 865/870 freqbench results.
+	 * Should improve SoT w/o affecting performance
+	 * on daily usage (sm8250-aa is old, but not weak).
+	 */
+	if (cpu == 7) // prime 
+		cap_freq = 2553600;
+	else if (cpu >= 4) // big
+		cap_freq = 2246400;
+	else // little
+		cap_freq = 1708800;
+
+	freq = min(freq, cap_freq);
 
 	if (freq == sg_policy->cached_raw_freq && !sg_policy->need_freq_update)
 		return sg_policy->next_freq;
@@ -693,6 +710,21 @@ static void sugov_stop(struct cpufreq_policy *policy)
 static void sugov_limits(struct cpufreq_policy *policy)
 {
 	struct sugov_policy *sg_policy = policy->governor_data;
+	unsigned int cpu = cpumask_first(policy->cpus);
+	unsigned int cap_freq;
+
+	/*
+	 * This is just to report the frequency cap to userspace,
+	 * real work is done in get_next_freq()
+	 */
+	if (cpu == 7) // prime 
+		cap_freq = 2553600;
+	else if (cpu >= 4) // big
+		cap_freq = 2246400;
+	else // little
+		cap_freq = 1708800;
+
+	policy->max = min(policy->cpuinfo.max_freq, cap_freq);
 
 	if (!policy->fast_switch_enabled) {
 		mutex_lock(&sg_policy->work_lock);
