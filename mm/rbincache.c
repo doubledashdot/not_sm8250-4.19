@@ -178,7 +178,9 @@ static void rc_rbnode_release(struct kref *kref)
 	struct rc_rbnode *rbnode;
 
 	rbnode = container_of(kref, struct rc_rbnode, refcount);
-	BUG_ON(rbnode->ratree.rnode);
+
+	BUG_ON(!xa_empty(&rbnode->ratree));
+
 	kmem_cache_free(rc_rbnode_cache, rbnode);
 	atomic_dec(&rc_num_rbnode);
 }
@@ -192,7 +194,7 @@ static void rc_rbnode_release(struct kref *kref)
  */
 static inline int rc_rbnode_empty(struct rc_rbnode *rbnode)
 {
-	return rbnode->ratree.rnode == NULL;
+	return xa_empty(&rbnode->ratree);
 }
 
 /*
