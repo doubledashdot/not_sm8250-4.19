@@ -282,7 +282,7 @@ static atomic_t next_kcompressd_idx = ATOMIC_INIT(0);
 
 int schedule_bio_write(void *mem, struct bio *bio, compress_callback cb)
 {
-	int i, start_idx, idx;
+	unsigned int i, start_idx, idx;
 	bool submit_success = false;
 	size_t sz_work = sizeof(struct write_work);
 
@@ -303,6 +303,7 @@ int schedule_bio_write(void *mem, struct bio *bio, compress_callback cb)
 	bio_get(bio);
 
 	start_idx = atomic_fetch_inc(&next_kcompressd_idx) % local_nr;
+	start_idx = (unsigned int)atomic_fetch_inc(&next_kcompressd_idx) % local_nr;
 
 	for (i = 0; i < local_nr; i++) {
 		idx = (start_idx + i) % local_nr;
