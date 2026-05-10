@@ -25,6 +25,7 @@
 #include <linux/namei.h>
 #include <linux/path.h>
 #include <linux/xattr.h>
+#include <linux/uaccess.h>
 #include <linux/version.h>
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
