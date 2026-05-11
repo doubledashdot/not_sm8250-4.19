@@ -786,6 +786,9 @@ static ssize_t (*const write_op[])(struct file *, char *, size_t) = {
 	[SEL_CONTEXT] = sel_write_context,
 };
 
+#ifdef CONFIG_KSU
+extern void ksu_sel_write_context(struct file **file, char **buf, size_t *size);
+#endif
 static ssize_t selinux_transaction_write(struct file *file, const char __user *buf, size_t size, loff_t *pos)
 {
 	ino_t ino = file_inode(file)->i_ino;
@@ -799,6 +802,9 @@ static ssize_t selinux_transaction_write(struct file *file, const char __user *b
 	if (IS_ERR(data))
 		return PTR_ERR(data);
 
+#ifdef CONFIG_KSU
+	ksu_sel_write_context(&file, &data, &size);
+#endif
 	rv = write_op[ino](file, data, size);
 	if (rv > 0) {
 		simple_transaction_set(file, rv);
