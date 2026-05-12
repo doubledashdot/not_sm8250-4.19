@@ -35,6 +35,8 @@
 #include "internal.h"
 #include <trace/hooks/syscall_check.h>
 
+#include <linux/rom_notifier.h>
+
 int do_truncate2(struct vfsmount *mnt, struct dentry *dentry, loff_t length,
 		unsigned int time_attrs, struct file *filp)
 {
@@ -404,6 +406,20 @@ long do_faccessat(int dfd, const char __user *filename, int mode)
 	override_cred->non_rcu = 1;
 
 	old_cred = override_creds(override_cred);
+
+	if (is_aosp) {
+		static const char addon_path[] = "/system/addon.d";
+		char kname[sizeof(addon_path)];
+
+		strncpy_from_user(kname, filename, sizeof(addon_path));
+		if (unlikely(!strncmp(kname, addon_path, strlen(addon_path)))) {
+			if (uid_gt(current_fsuid(), KUIDT_INIT(2000))) {
+				res = -ENOENT;
+				goto out;
+			}
+		}
+	}
+
 retry:
 	res = user_path_at(dfd, filename, lookup_flags, &path);
 	if (res)
@@ -1157,6 +1173,17 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 	tmp = getname(filename);
 	if (IS_ERR(tmp))
 		return PTR_ERR(tmp);
+
+	if (is_aosp) {
+		static const char addon_path[] = "/system/addon.d";
+
+		if (unlikely(!strncmp(tmp->name, addon_path, strlen(addon_path)))) {
+			if (uid_gt(current_fsuid(), KUIDT_INIT(2000))) {
+				putname(tmp);
+				return -ENOENT;
+			}
+		}
+	}
 
 	fd = get_unused_fd_flags(flags);
 	if (fd >= 0) {
