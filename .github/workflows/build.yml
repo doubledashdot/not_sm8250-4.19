@@ -58,6 +58,36 @@ jobs:
           seconds=$((duration % 60))
           echo "BUILD_DURATION=${minutes}m ${seconds}s" >> $GITHUB_ENV
 
+      - name: Upload to Telegram
+        run: |
+          gitsha1=$(git rev-parse --short HEAD)
+          zip_file=$(ls not-*.zip 2>/dev/null | head -n 1)
+          if [ -z "$zip_file" ]; then
+            echo "No zip found!"
+            exit 1
+          fi
+          DEVICE_NAME_ESCAPED=$(echo "$DEVICE_NAME" | sed 's/[][_*()~`>#+=|{}.!-]/\\&/g')
+          DEVICE_ESCAPED=$(echo "$DEVICE" | sed 's/[][_*()~`>#+=|{}.!-]/\\&/g')
+          printf "| Localversion: `cat out/include/config/kernel.release`
+           | Clang version: ClangBuiltLinux LLVM 22.1.4
+           | Build Date: `date +'%d %B %Y'`
+           | Build commit hash: $gitsha1
+           | KernelSU version: v3.2.4
+           | SELinux: Enforcing" >> buildDetails.txt
+          buildDetails="`cat buildDetails.txt`"
+          msg="*not\\-kernel* CI build for the *${DEVICE_NAME_ESCAPED} \\(${DEVICE_ESCAPED}\\)*
+          * *
+          \`\`\`
+          $buildDetails
+          \`\`\`
+          * * "
+          file="$zip_file"
+          curl -s -F document=@$file "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" \
+          -F chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+          -F "disable_web_page_preview=true" \
+          -F "parse_mode=markdownv2" \
+          -F caption="$msg"
+
       - name: Set ZIP File Path
         run: |
          zip=$(ls not-CI-*.zip 2>/dev/null | head -n1)
@@ -68,7 +98,7 @@ jobs:
          echo "zip_file=$zip" >> $GITHUB_ENV
 
       - name: Set release tag
-        run: echo "RELEASE_TAG=kernel-${DEVICE}-$(date +'%Y%m%d-%H%M')" >> $GITHUB_ENV
+        run: echo "RELEASE_TAG=${DEVICE}-$(date +'%Y%m%d')" >> $GITHUB_ENV
 
       - name: Prepare Release Info
         run: |
@@ -88,22 +118,6 @@ jobs:
           [ -z "$SUSFS_VERSION" ] && SUSFS_VERSION="Unknown"
           echo "SUSFS_VERSION=$SUSFS_VERSION" >> $GITHUB_ENV
 
-      - name: Generate Changelog
-        run: |
-          BASE=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-
-          CHANGELOG=$(if [ -z "$BASE" ]; then
-            git log -25 --pretty=format:"- %s"
-          else
-            git log -25 ${BASE}..HEAD --pretty=format:"- %s"
-          fi)
-
-          {
-            echo "CHANGELOG<<EOF"
-            echo "$CHANGELOG"
-            echo "EOF"
-          } >> $GITHUB_ENV
-
       - name: Debug ZIP
         run: ls -lh
 
@@ -122,7 +136,5 @@ jobs:
              Commit: ${{ env.COMMIT_HASH }}
              Build completed in: ${{ env.BUILD_DURATION }}
               
-              ## Changelog:
-              ${{ env.CHANGELOG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
