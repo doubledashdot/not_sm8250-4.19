@@ -68,20 +68,11 @@ jobs:
           fi
           DEVICE_NAME_ESCAPED=$(echo "$DEVICE_NAME" | sed 's/[][_*()~`>#+=|{}.!-]/\\&/g')
           DEVICE_ESCAPED=$(echo "$DEVICE" | sed 's/[][_*()~`>#+=|{}.!-]/\\&/g')
-          echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          echo "CLANG_VERSION=$(${{ github.workspace }}/tc/clang/bin/clang --version | head -n1)" >> $GITHUB_ENV
-          KSU_VERSION=$(grep -m1 'KSU_VERSION' -r ./KernelSU/kernel/Makefile | sed -E 's/.*KSU_VERSION=([0-9]+).*/\1/')
-          [ -z "$KSU_VERSION" ] && KSU_VERSION="Unknown"
-          echo "KSU_VERSION=$KSU_VERSION" >> $GITHUB_ENV
-          git -C KernelSU fetch --tags 2>/dev/null || true
-          KSU_VERSION_STR=$(git -C KernelSU describe --tags --always 2>/dev/null)
-          [ -z "$KSU_VERSION_STR" ] && KSU_VERSION_STR="Unknown"
-          echo "KSU_VERSION_STR=$KSU_VERSION_STR" >> $GITHUB_ENV
           printf "| Localversion: `cat out/include/config/kernel.release`
-           | Clang version: ${{ env.CLANG_VERSION }}
+           | Clang version: ClangBuiltLinux LLVM 22.1.4
            | Build Date: `date +'%d %B %Y'`
            | Build commit hash: $gitsha1
-           | KernelSU version: ${{ env.KSU_VERSION }} / ${{ env.KSU_VERSION_STR }}
+           | KernelSU version: v3.2.4
            | SELinux: Enforcing" >> buildDetails.txt
           buildDetails="`cat buildDetails.txt`"
           msg="*not\\-kernel* CI build for the *${DEVICE_NAME_ESCAPED} \\(${DEVICE_ESCAPED}\\)*
