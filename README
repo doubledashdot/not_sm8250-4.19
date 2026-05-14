@@ -1,4 +1,4 @@
-Linux kernel
+Linux kernel version 4.19
 ============
 
 There are several guides for kernel developers and users. These guides can
@@ -17,3 +17,195 @@ See Documentation/00-INDEX for a list of what is contained in each file.
 Please read the Documentation/process/changes.rst file, as it contains the
 requirements for building and running the kernel, and information about
 the problems which may result by upgrading your kernel.
+
+Linux (not)kernel
+============
+
+In order to build the kernel, run build-local.sh and select the configs you'd like using.
+
+## Directory Structure
+/kernel/sm8250
+├── arch                         # CPU architecture-specific code
+│   └── arm64                    # Code for ARM64 architecture
+│       ├── boot                 # Kernel boot/compression code and DTBs
+│       ├── configs              # Default kernel configuration files
+│       ├── include              # ARM64-specific header files
+│       ├── kernel               # Core ARM64 kernel logic
+│       ├── kvm                  # ARM64 KVM virtualization support
+│       ├── lib                  # ARM64 helper routines and optimized libs
+│       ├── mm                   # ARM64 memory-management implementation
+│       └── net                  # ARM64 networking optimizations/hooks
+│
+├── block                        # Generic block I/O subsystem
+│   ├── bfq                      # BFQ I/O scheduler
+│   ├── blk-cgroup               # Block I/O cgroup controller
+│   ├── elevator                 # I/O scheduler framework
+│   ├── mq-deadline              # Multi-queue deadline scheduler
+│   └── partitions               # Partition table parsers (GPT/MBR/etc)
+│
+├── certs                        # X.509 certificates and signing keys
+│
+├── crypto                       # Kernel cryptographic subsystem
+│   ├── aes                      # AES implementations
+│   ├── arm64                    # ARM64 crypto acceleration
+│   ├── asymmetric_keys          # Public/private key infrastructure
+│   ├── testmgr                  # Crypto self-tests
+│   └── zstd                     # Compression helpers
+│
+├── Documentation                # Kernel documentation and API references
+│
+├── drivers                      # Device drivers
+│   ├── android                  # Android-specific drivers/features
+│   ├── base                     # Core driver model infrastructure
+│   ├── bluetooth               # Bluetooth stack and drivers
+│   ├── char                     # Character device drivers
+│   ├── clk                      # Clock framework/drivers
+│   ├── cpufreq                  # CPU frequency scaling
+│   ├── cpuidle                  # CPU idle-state management
+│   ├── dma-buf                  # DMA buffer sharing framework
+│   ├── firmware                 # Firmware loading helpers
+│   ├── gpu                      # GPU/display drivers (Adreno/MSM)
+│   ├── i2c                      # I2C bus subsystem
+│   ├── input                    # Touchscreen, keyboard, sensors
+│   ├── iommu                    # IOMMU subsystem
+│   ├── irqchip                  # Interrupt controller drivers
+│   ├── leds                     # LED/backlight drivers
+│   ├── media                    # Camera/video/media subsystem
+│   ├── mmc                      # eMMC/UFS/SD storage drivers
+│   ├── net                      # Network device drivers
+│   ├── nvmem                    # Non-volatile memory framework
+│   ├── pci                      # PCI/PCIe subsystem
+│   ├── phy                      # PHY/transceiver drivers
+│   ├── pinctrl                  # Pin multiplexing and GPIO configs
+│   ├── platform                 # Platform-specific drivers
+│   ├── power                    # Battery/charger/power management
+│   ├── pwm                      # PWM subsystem
+│   ├── remoteproc               # Remote processor management
+│   ├── rpmsg                    # Remote processor messaging
+│   ├── rtc                      # Real-time clock drivers
+│   ├── scsi                     # SCSI/UFS storage subsystem
+│   ├── soc                      # SoC-specific frameworks
+│   ├── spi                      # SPI bus subsystem
+│   ├── staging                  # Experimental/incomplete drivers
+│   ├── thermal                  # Thermal management
+│   ├── tty                      # Serial/UART/TTY subsystem
+│   ├── ufs                      # UFS storage drivers
+│   ├── usb                      # USB subsystem
+│   ├── video                    # Framebuffer/display drivers
+│   └── virt                     # Virtualization-related drivers
+│
+├── fs                           # Filesystem implementations
+│   ├── configfs                 # Configfs virtual filesystem
+│   ├── debugfs                  # Debug filesystem
+│   ├── ext4                     # EXT4 filesystem
+│   ├── f2fs                     # Flash-Friendly Filesystem
+│   ├── proc                     # /proc virtual filesystem
+│   ├── pstore                   # Persistent crash logs
+│   ├── selinux                  # SELinux filesystem hooks
+│   ├── sysfs                    # Sysfs virtual filesystem
+│   ├── ubifs                    # UBI flash filesystem
+│   └── vfat                     # FAT/VFAT filesystem
+│
+├── include                      # Global kernel header files
+│   ├── asm-generic              # Generic low-level architecture headers
+│   ├── crypto                   # Crypto APIs
+│   ├── dt-bindings              # Device-tree binding constants
+│   ├── keys                     # Key management interfaces
+│   ├── linux                    # Main kernel APIs and definitions
+│   ├── media                    # Media subsystem APIs
+│   ├── net                      # Networking APIs
+│   ├── soc                      # SoC-related interfaces
+│   ├── trace                    # Tracing APIs
+│   └── uapi                     # Userspace-exposed kernel headers
+│
+├── init                         # Early kernel initialization
+│
+├── ipc                          # Inter-process communication
+│   ├── msgutil                  # System V message queues
+│   ├── sem                      # Semaphore implementation
+│   └── shm                      # Shared memory subsystem
+│
+├── kernel                       # Core kernel functionality
+│   ├── cgroup                   # Control groups
+│   ├── cpu                      # CPU hotplug and management
+│   ├── events                   # Event tracing/perf events
+│   ├── locking                  # Spinlocks/mutexes/rwlocks
+│   ├── power                    # Suspend/resume core
+│   ├── printk                   # Kernel logging system
+│   ├── sched                    # CPU scheduler
+│   ├── time                     # Timers and timekeeping
+│   ├── trace                    # Tracing infrastructure
+│   └── watchdog                 # Kernel watchdog subsystem
+│
+├── lib                          # Shared helper routines
+│   ├── crypto                   # Generic crypto helpers
+│   ├── decompressor             # Compression/decompression routines
+│   ├── raid6                    # RAID6 math helpers
+│   └── zlib                     # zlib compression support
+│
+├── mm                           # Memory management subsystem
+│   ├── kasan                    # Kernel address sanitizer
+│   ├── kfence                    # Sampling-based memory safety error detector
+│   ├── sec_mm           # SEC memory management module
+│   ├── page_alloc               # Physical page allocator
+│   ├── slub                     # SLUB allocator
+│   ├── swap                     # Swap subsystem
+│   └── vmalloc                  # Virtual memory allocator
+│
+├── net                          # Networking stack
+│   ├── bluetooth                # Bluetooth networking
+│   ├── bridge                   # Ethernet bridge support
+│   ├── core                     # Core networking infrastructure
+│   ├── ipv4                     # IPv4 stack
+│   ├── ipv6                     # IPv6 stack
+│   ├── mac80211                 # Wi-Fi MAC layer
+│   ├── netfilter                # Firewall/NAT framework
+│   ├── qrtr                     # Qualcomm IPC router
+│   ├── sched                    # Packet schedulers/QoS
+│   ├── unix                     # UNIX domain sockets
+│   ├── wireless                 # Wireless stack
+│   └── xfrm                     # IPsec transformation framework
+│
+├── samples                      # Example kernel modules/code
+│
+├── scripts                      # Build/configuration helper scripts
+│   ├── dtc                      # Device-tree compiler (v1.4.6-21)
+│   ├── kconfig                  # Kernel configuration system
+│   ├── mod                      # Module helper scripts
+│   └── selinux                  # SELinux policy tools
+│
+├── security                     # Linux Security Modules (LSM)
+│   ├── selinux                  # SELinux implementation
+│   ├── smack                    # SMACK security module
+│   ├── tomoyo                   # TOMOYO security module
+│   └── yama                     # Yama ptrace restrictions
+│
+├── sound                        # ALSA and audio subsystem
+│   ├── core                     # ALSA core
+│   ├── soc                      # ASoC subsystem for embedded audio
+│   ├── usb                      # USB audio devices
+│   └── codecs                   # Audio codec drivers
+│
+├── techpack                     # Qualcomm vendor techpacks
+│   ├── audio                    # Qualcomm audio stack
+│   ├── display                  # Display/DRM drivers
+│   ├── sec-camera           # Qualcomm/Samsung camera drivers
+│   ├── stub                     # _techpack_stub
+│   └── video                    # Video codec drivers
+│
+├── tools                        # Userspace kernel-development tools
+│
+├── usr                          # Initramfs generation support
+│
+├── virt                         # Virtualization infrastructure
+│   ├── kvm                      # Kernel Virtual Machine
+│   └── lib                      # Virtualization helper code
+│
+├── wifi                         # Qualcomm wi-fi WCNSS 
+│
+├── Android.bp                   # Android Soong build definition
+├── COPYING                      # Kernel license (GPLv2)
+├── Kbuild                       # Top-level kernel build rules
+├── Kconfig                      # Top-level configuration menu
+├── Makefile                     # Main kernel build Makefile
+└── README                       # Kernel build and usage notes, you are here :)
