@@ -1021,7 +1021,10 @@ static void sugov_limits(struct cpufreq_policy *policy)
 {
 	struct sugov_policy *sg_policy = policy->governor_data;
 	unsigned long flags, now;
-	unsigned int freq;
+	unsigned int freq, cpu = cpumask_first(policy->cpus);;
+
+	if (cpu <= 3) // little cores
+		policy->max = 1804800;
 
 	sugov_build_dvfs_headroom_lut(sg_policy);
 
