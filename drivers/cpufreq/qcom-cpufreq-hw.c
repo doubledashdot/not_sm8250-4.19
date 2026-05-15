@@ -433,6 +433,15 @@ static int qcom_cpufreq_hw_cpu_online(struct cpufreq_policy *policy)
 
 	irq_set_affinity_and_hint(c->dcvsh_irq, &c->related_cpus);
 
+	/*
+	 * If the cluster went offline while LMh throttling was active, the
+	 * ISR will have called disable_irq_nosync() and the poll work will
+	 * have been cancelled before it could reach the enable_irq() call
+	 * inside qcom_lmh_dcvs_notify(). Re-enable the IRQ conditionally.
+	 */
+	if (irqd_irq_disabled(irq_get_irq_data(c->dcvsh_irq)))
+		enable_irq(c->dcvsh_irq);
+
 	return 0;
 }
 
