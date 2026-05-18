@@ -337,6 +337,9 @@ static void msm_ipcc_resume(void)
 		name = desc->action->name;
 
 	pr_warn("%s: %d triggered %s\n", __func__, virq, name);
+#ifdef CONFIG_SEC_PM
+	log_irq_wakeup_reason(virq);
+#endif
 }
 #else
 #define msm_ipcc_suspend NULL
