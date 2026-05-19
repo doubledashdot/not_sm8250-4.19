@@ -6,7 +6,7 @@
 ifeq ($(CONFIG_CRYPTO_FIPS), y)
 #ccflags-y += -DCONFIG_CRYPTO_FIPS_FUNC_TEST
 endif
-ccflags-y += $(DISABLE_LTO_CLANG) $(DISABLE_CFI_CLANG) -fno-data-sections -fno-function-sections
+
 # ---------------------------------------
 # Keep this at the top of FIPS boundary
 obj-$(CONFIG_CRYPTO_FIPS) += fips140_first_file.o
