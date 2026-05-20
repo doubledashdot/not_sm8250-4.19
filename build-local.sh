@@ -11,12 +11,6 @@ NC='\033[0m'
 # Available models
 VALID_MODELS=("bloomxq" "c1q" "c2q" "f2q" "gts7l" "gts7lwifi" "gts7xl" "gts7xlwifi" "r8q" "x1q" "y2q" "z3q")
 
-# Models that do support EUR region
-EUR_MODELS=("r8q" "gts7l" "gts7lwifi" "gts7xl" "gts7xlwifi" "f2q" "bloomxq")
-
-# Available regions
-VALID_REGIONS=("eur" "kor" "chn" "usa")
-
 # Available build types
 VALID_BUILDS=("ci" "perf" "recovery")
 
@@ -60,26 +54,6 @@ if ! validate_choice "$model_choice" "${VALID_MODELS[@]}"; then
     exit 1
 fi
 
-
-# Region selection
-prompt "Select region (or press enter for default)" "${VALID_REGIONS[@]}"
-read -p " - Enter your choice: " region_choice
-region_choice=$(echo "$region_choice" | tr '[:upper:]' '[:lower:]')
-
-if [[ -n "$region_choice" ]] && ! validate_choice "$region_choice" "${VALID_REGIONS[@]}"; then
-    echo "Invalid region choice! Exiting."
-    exit 1
-fi
-
-# EUR restriction logic
-if [[ "$region_choice" == "eur" && ! " ${EUR_MODELS[*]} " =~ " $model_choice " ]]; then
-    echo "=============================================="
-    echo "Error: This model doesn't support the EUR region."
-    echo "=============================================="
-    exit 1
-fi
-
-
 # Build type selection
 prompt "Which build type do you want?" "${VALID_BUILDS[@]}"
 read -p " - Enter your choice: " build_choice
@@ -102,17 +76,10 @@ fi
 
 # Target properties
 MODEL=$model_choice
-REGION=$region_choice
-
 export PROJECT_NAME="${MODEL}"
+PROJECT_CONFIG="vendor/samsung/${MODEL}.config"
+
 [ -z "${PLATFORM_VERSION}" ] && export PLATFORM_VERSION=11
-
-if [ -n "$REGION" ]; then
-    PROJECT_CONFIG="vendor/samsung/${MODEL}_${REGION}.config"
-else
-    PROJECT_CONFIG="vendor/samsung/${MODEL}.config"
-fi
-
 
 # Build configuration switch
 case "$build_choice" in
