@@ -5515,7 +5515,6 @@ int kgsl_of_property_read_ddrtype(struct device_node *node, const char *base,
 int kgsl_device_platform_probe(struct kgsl_device *device)
 {
 	int status = -EINVAL;
-	int cpu;
 	struct sched_param param = { .sched_priority = 16 };
 
 	status = _register_device(device);
@@ -5596,11 +5595,7 @@ int kgsl_device_platform_probe(struct kgsl_device *device)
 #ifdef CONFIG_SMP
 #ifdef CONFIG_DISPLAY_SAMSUNG
 	device->pwrctrl.pm_qos_req_dma.type = PM_QOS_REQ_AFFINE_CORES;
-	cpumask_empty(&device->pwrctrl.pm_qos_req_dma.cpus_affine);
-	for_each_possible_cpu(cpu) {
-		if ((1 << cpu) & 0xf)
-			cpumask_set_cpu(cpu, &device->pwrctrl.pm_qos_req_dma.cpus_affine);
-	}
+	device->pwrctrl.pm_qos_req_dma.cpus_affine = BIT(0) | BIT(1) | BIT(2) | BIT(3);
 #else
 	device->pwrctrl.pm_qos_req_dma.type = PM_QOS_REQ_AFFINE_IRQ;
 	device->pwrctrl.pm_qos_req_dma.irq = device->pwrctrl.interrupt_num;
