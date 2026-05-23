@@ -8,7 +8,7 @@ static int  blocked_cnt;
 
 struct e404_attributes e404_data = {
     .kgsl_skip_zeroing = 0,
-    .file_sync = 0,
+    .file_sync = 1,
     .avoid_dirty_pte = 1,
     .bg_blocklist = "com.shopee.id,com.lazada.android,com.tokopedia.tkpd",
 };
