@@ -496,7 +496,7 @@ config STACKPROTECTOR_STRONG
 	  size by about 2%.
 
 config LTO
-	def_bool n
+	def_bool y
 
 config ARCH_SUPPORTS_LTO_CLANG
 	bool
@@ -513,8 +513,8 @@ config ARCH_SUPPORTS_THINLTO
 
 config THINLTO
 	bool "Use clang ThinLTO (EXPERIMENTAL)"
-	depends on LTO_CLANG && ARCH_SUPPORTS_THINLTO
 	default y
+	depends on LTO_CLANG && ARCH_SUPPORTS_THINLTO
 	help
 	  Use ThinLTO to speed up Link Time Optimization.
 
@@ -530,9 +530,6 @@ config LTO_NONE
 config LTO_CLANG
 	bool "Use clang Link Time Optimization (LTO) (EXPERIMENTAL)"
 	depends on ARCH_SUPPORTS_LTO_CLANG
-	depends on !FTRACE_MCOUNT_RECORD || HAVE_C_RECORDMCOUNT
-	depends on !KASAN
-	depends on CC_IS_CLANG && LD_IS_LLD
 	select LTO
 	help
           This option enables clang's Link Time Optimization (LTO), which allows
@@ -551,6 +548,7 @@ config CFI
 
 config CFI_PERMISSIVE
 	bool "Use CFI in permissive mode"
+	default n
 	depends on CFI
 	help
 	  When selected, Control Flow Integrity (CFI) violations result in a
@@ -559,6 +557,7 @@ config CFI_PERMISSIVE
 
 config CFI_CLANG
 	bool "Use clang Control Flow Integrity (CFI) (EXPERIMENTAL)"
+	default y
 	depends on LTO_CLANG
 	depends on KALLSYMS
 	select CFI
@@ -583,6 +582,7 @@ config ARCH_SUPPORTS_SHADOW_CALL_STACK
 
 config SHADOW_CALL_STACK
 	bool "Clang Shadow Call Stack"
+	default y
 	depends on ARCH_SUPPORTS_SHADOW_CALL_STACK
 	help
 	  This option enables Clang's Shadow Call Stack, which uses a
@@ -1024,9 +1024,10 @@ config ARCH_HAS_RELR
 	bool
 
 config RELR
-	bool "Use RELR relocation packing"
-	depends on ARCH_HAS_RELR && TOOLS_SUPPORT_RELR
+	bool
 	default y
+	depends on ARCH_HAS_RELR && TOOLS_SUPPORT_RELR
+	select LTO_CLANG #ok
 	help
 	  Store the kernel's dynamic relocations in the RELR relocation packing
 	  format. Requires a compatible linker (LLD supports this feature), as
@@ -1044,6 +1045,7 @@ config ARCH_HAS_NONLEAF_PMD_YOUNG
 
 config LLVM_POLLY
 	bool "Enable LLVM's polyhedral loop optimizer (Polly)"
+	default y
 	help
 	  This option enables LLVM's polyhedral loop optimizer known as Polly.
 	  Polly is able to optimize various loops throughout the kernel for
