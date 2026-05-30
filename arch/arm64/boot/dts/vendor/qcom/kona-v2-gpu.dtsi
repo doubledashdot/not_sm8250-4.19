@@ -8,9 +8,9 @@
 	gpu_opp_table_v2: gpu-opp-table_v2 {
 		compatible = "operating-points-v2";
 
-		opp-840000000 {
-			opp-hz = /bits/ 64 <840000000>;
-			opp-microvolt = <278>;
+		opp-862000000 {
+			opp-hz = /bits/ 64 <862000000>;
+			opp-microvolt = <280>;
 		};
 		
 		opp-670000000 {
@@ -75,7 +75,7 @@
 
 			qcom,gpu-pwrlevel@0 {
 				reg = <0>;
-				qcom,gpu-freq = <840000000>;
+				qcom,gpu-freq = <862000000>;
 				qcom,bus-freq-ddr7 = <11>;
 				qcom,bus-min-ddr7 = <11>;
 				qcom,bus-max-ddr7 = <11>;
@@ -84,7 +84,7 @@
 				qcom,bus-min-ddr8 = <11>;
 				qcom,bus-max-ddr8 = <11>;
 
-				qcom,acd-level = <0x802b5ffd>;
+				qcom,acd-level = <0x882b5ffd>;
 			};
 
 			qcom,gpu-pwrlevel@1 {
