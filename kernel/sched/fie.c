@@ -497,7 +497,7 @@ void fie_rate_set(int cpu, unsigned int freq)
 
 	raw_spin_lock(&t->rate_lock);
 	if (!t->rate.set_time)
-		t->rate.set_time = __arch_counter_get_cntpct();
+		t->rate.set_time = arch_counter_get_cntpct();
 	t->rate.freq = freq;
 	raw_spin_unlock(&t->rate_lock);
 }
