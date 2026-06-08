@@ -28,14 +28,16 @@ git submodule update --init --recursive
 
 export PATH="$TC_DIR/bin:$PATH"
 
+# Toolchain setup
 if ! [ -d "$TC_DIR" ]; then
-    echo -e "${YELLOW} Clang not found! Cloning to $TC_DIR...${NC}"
+    echo -e "${YELLOW}Clang not found! Downloading...${NC}"
     mkdir -p "$TC_DIR"
     if ! curl -L https://www.kernel.org/pub/tools/llvm/files/llvm-22.1.7-x86_64.tar.gz \
         | tar -xz -C "$TC_DIR" --strip-components=1; then
-        echo -e "${RED}Cloning failed! Aborting...${NC}"
+        echo -e "${RED}Download failed!${NC}"
         exit 1
     fi
+    echo -e "${GREEN}Clang ready!${NC}"
 fi
 
 mkdir -p out
